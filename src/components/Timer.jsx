@@ -12,42 +12,50 @@ export default function Timer({ subjects, onSessionComplete }) {
   const [selectedSubject, setSelectedSubject] = useState('')
   const [note, setNote] = useState('')
 
-  const startRef = useRef(null)
-  const sessionSecondsRef = useRef(0)
-  const pauseStartRef = useRef(null)
+  // wallclock start + accumulated pause offset in ms
+  const startTimeRef = useRef(null)     // Date.now() when timer started
+  const sessionStartISORef = useRef(null) // ISO string für DB
+  const pauseOffsetRef = useRef(0)      // total ms spent in pause
+  const pauseBeganRef = useRef(null)    // Date.now() when current pause started
+  const pauseStartISORef = useRef(null) // ISO when pause began (for ended_at)
+
   const intervalRef = useRef(null)
   const pauseIntervalRef = useRef(null)
+
+  const getElapsed = useCallback(() => {
+    if (!startTimeRef.current) return 0
+    return Math.floor((Date.now() - startTimeRef.current - pauseOffsetRef.current) / 1000)
+  }, [])
 
   const saveSession = useCallback(async (durationSeconds) => {
     if (durationSeconds < 5) return
     await onSessionComplete({
       subject_id: selectedSubject || null,
-      started_at: startRef.current,
-      ended_at: pauseStartRef.current ?? new Date().toISOString(),
+      started_at: sessionStartISORef.current,
+      ended_at: pauseStartISORef.current ?? new Date().toISOString(),
       duration_seconds: durationSeconds,
       note: note.trim() || null,
     })
     setSeconds(0)
     setNote('')
-    sessionSecondsRef.current = 0
-    startRef.current = null
-    pauseStartRef.current = null
+    startTimeRef.current = null
+    pauseOffsetRef.current = 0
+    pauseBeganRef.current = null
+    pauseStartISORef.current = null
+    sessionStartISORef.current = null
   }, [selectedSubject, note, onSessionComplete])
 
-  // Haupttimer
+  // Haupttimer — liest Wanduhrzeit, immun gegen Tab-Throttling
   useEffect(() => {
     if (running && !paused) {
-      intervalRef.current = setInterval(() => {
-        setSeconds(s => s + 1)
-        sessionSecondsRef.current += 1
-      }, 1000)
+      intervalRef.current = setInterval(() => setSeconds(getElapsed()), 1000)
     } else {
       clearInterval(intervalRef.current)
     }
     return () => clearInterval(intervalRef.current)
-  }, [running, paused])
+  }, [running, paused, getElapsed])
 
-  // Pause-Countdown → auto-stop nach 5 min
+  // Pause-Countdown
   useEffect(() => {
     if (paused) {
       setPauseCountdown(PAUSE_TIMEOUT_SECONDS)
@@ -55,8 +63,7 @@ export default function Timer({ subjects, onSessionComplete }) {
         setPauseCountdown(c => {
           if (c <= 1) {
             clearInterval(pauseIntervalRef.current)
-            // Auto-save und reset
-            const dur = sessionSecondsRef.current
+            const dur = getElapsed()
             setRunning(false)
             setPaused(false)
             setSeconds(0)
@@ -71,28 +78,36 @@ export default function Timer({ subjects, onSessionComplete }) {
       setPauseCountdown(0)
     }
     return () => clearInterval(pauseIntervalRef.current)
-  }, [paused, saveSession])
+  }, [paused, saveSession, getElapsed])
 
   const handleStart = () => {
-    startRef.current = new Date().toISOString()
-    sessionSecondsRef.current = 0
+    const now = Date.now()
+    startTimeRef.current = now
+    sessionStartISORef.current = new Date(now).toISOString()
+    pauseOffsetRef.current = 0
     setSeconds(0)
     setRunning(true)
     setPaused(false)
   }
 
   const handlePause = () => {
-    pauseStartRef.current = new Date().toISOString()
+    pauseBeganRef.current = Date.now()
+    pauseStartISORef.current = new Date().toISOString()
     setPaused(true)
   }
 
   const handleResume = () => {
-    pauseStartRef.current = null
+    // add time spent in pause to offset so elapsed stays correct
+    if (pauseBeganRef.current) {
+      pauseOffsetRef.current += Date.now() - pauseBeganRef.current
+      pauseBeganRef.current = null
+      pauseStartISORef.current = null
+    }
     setPaused(false)
   }
 
   const handleStop = async () => {
-    const dur = sessionSecondsRef.current
+    const dur = getElapsed()
     setRunning(false)
     setPaused(false)
     await saveSession(dur)
