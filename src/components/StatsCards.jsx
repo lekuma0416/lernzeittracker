@@ -2,10 +2,10 @@ import { formatDurationHuman, todayISO, startOfWeek, startOfMonth } from '../lib
 
 function StatCard({ label, value, sub }) {
   return (
-    <div className="bg-gray-900 rounded-2xl p-5 border border-gray-800">
-      <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">{label}</p>
-      <p className="text-2xl font-bold text-white">{value}</p>
-      {sub && <p className="text-gray-500 text-xs mt-1">{sub}</p>}
+    <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-200 dark:border-gray-800">
+      <p className="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+      {sub && <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">{sub}</p>}
     </div>
   )
 }
