@@ -15,7 +15,7 @@ export default function App() {
   useTheme()
   const { user, loading } = useAuth()
   const { sessions, addSession, deleteSession } = useSessions(user?.id)
-  const { subjects, addSubject, deleteSubject } = useSubjects(user?.id)
+  const { subjects, addSubject, updateSubject, deleteSubject } = useSubjects(user?.id)
   const { goals, upsertGoal, deleteGoal } = useGoals(user?.id)
   const [activeTab, setActiveTab] = useState('timer')
 
@@ -50,7 +50,7 @@ export default function App() {
           <CalendarPage sessions={sessions} subjects={subjects} />
         )}
         {activeTab === 'subjects' && (
-          <SubjectsPage subjects={subjects} onAdd={addSubject} onDelete={deleteSubject} />
+          <SubjectsPage subjects={subjects} onAdd={addSubject} onUpdate={updateSubject} onDelete={deleteSubject} />
         )}
       </main>
     </div>

@@ -18,11 +18,16 @@ export function useSubjects(userId) {
 
   useEffect(() => { fetchSubjects() }, [fetchSubjects])
 
-  const addSubject = async (name) => {
-    const color = DEFAULT_COLORS[subjects.length % DEFAULT_COLORS.length]
-    const { data } = await supabase.from('subjects').insert([{ name, color, user_id: userId }]).select().single()
+  const addSubject = async (name, color) => {
+    const resolvedColor = color ?? DEFAULT_COLORS[subjects.length % DEFAULT_COLORS.length]
+    const { data } = await supabase.from('subjects').insert([{ name, color: resolvedColor, user_id: userId }]).select().single()
     if (data) setSubjects(prev => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)))
     return data
+  }
+
+  const updateSubject = async (id, updates) => {
+    const { data } = await supabase.from('subjects').update(updates).eq('id', id).select().single()
+    if (data) setSubjects(prev => prev.map(s => s.id === id ? data : s))
   }
 
   const deleteSubject = async (id) => {
@@ -30,5 +35,5 @@ export function useSubjects(userId) {
     setSubjects(prev => prev.filter(s => s.id !== id))
   }
 
-  return { subjects, addSubject, deleteSubject, refetch: fetchSubjects }
+  return { subjects, addSubject, updateSubject, deleteSubject, refetch: fetchSubjects }
 }
