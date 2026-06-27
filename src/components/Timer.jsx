@@ -93,7 +93,7 @@ export default function Timer({ subjects, onSessionComplete }) {
       setPauseCountdown(0)
     }
     return () => clearInterval(pauseIntervalRef.current)
-  }, [paused, saveSession, getElapsed])
+  }, [paused, openDraft, getElapsed])
 
   const handleStart = () => {
     const now = Date.now()
