@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Play, Square, Pause, BookOpen } from 'lucide-react'
 import { formatDuration } from '../lib/utils'
+import SaveModal from './SaveModal'
 
 const PAUSE_TIMEOUT_SECONDS = 5 * 60
 
@@ -11,6 +12,7 @@ export default function Timer({ subjects, onSessionComplete }) {
   const [pauseCountdown, setPauseCountdown] = useState(0)
   const [selectedSubject, setSelectedSubject] = useState('')
   const [note, setNote] = useState('')
+  const [draft, setDraft] = useState(null)
 
   // wallclock start + accumulated pause offset in ms
   const startTimeRef = useRef(null)     // Date.now() when timer started
@@ -27,23 +29,37 @@ export default function Timer({ subjects, onSessionComplete }) {
     return Math.floor((Date.now() - startTimeRef.current - pauseOffsetRef.current) / 1000)
   }, [])
 
-  const saveSession = useCallback(async (durationSeconds) => {
-    if (durationSeconds < 5) return
-    await onSessionComplete({
+  const resetTimer = useCallback(() => {
+    setSeconds(0)
+    startTimeRef.current = null
+    pauseOffsetRef.current = 0
+    pauseBeganRef.current = null
+    pauseStartISORef.current = null
+    sessionStartISORef.current = null
+  }, [])
+
+  const openDraft = useCallback((durationSeconds) => {
+    if (durationSeconds < 5) { resetTimer(); return }
+    setDraft({
       subject_id: selectedSubject || null,
       started_at: sessionStartISORef.current,
       ended_at: pauseStartISORef.current ?? new Date().toISOString(),
       duration_seconds: durationSeconds,
       note: note.trim() || null,
     })
-    setSeconds(0)
+    resetTimer()
+  }, [selectedSubject, note, resetTimer])
+
+  const handleModalSave = async (session) => {
+    await onSessionComplete(session)
+    setDraft(null)
     setNote('')
-    startTimeRef.current = null
-    pauseOffsetRef.current = 0
-    pauseBeganRef.current = null
-    pauseStartISORef.current = null
-    sessionStartISORef.current = null
-  }, [selectedSubject, note, onSessionComplete])
+  }
+
+  const handleModalDiscard = () => {
+    setDraft(null)
+    setNote('')
+  }
 
   // Haupttimer — liest Wanduhrzeit, immun gegen Tab-Throttling
   useEffect(() => {
@@ -66,8 +82,7 @@ export default function Timer({ subjects, onSessionComplete }) {
             const dur = getElapsed()
             setRunning(false)
             setPaused(false)
-            setSeconds(0)
-            saveSession(dur)
+            openDraft(dur)
             return 0
           }
           return c - 1
@@ -106,17 +121,26 @@ export default function Timer({ subjects, onSessionComplete }) {
     setPaused(false)
   }
 
-  const handleStop = async () => {
+  const handleStop = () => {
     const dur = getElapsed()
     setRunning(false)
     setPaused(false)
-    await saveSession(dur)
+    openDraft(dur)
   }
 
   const subject = subjects.find(s => s.id === selectedSubject)
   const timerColor = subject?.color ?? '#6366f1'
 
   return (
+    <>
+    {draft && (
+      <SaveModal
+        draft={draft}
+        subjects={subjects}
+        onSave={handleModalSave}
+        onDiscard={handleModalDiscard}
+      />
+    )}
     <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800">
       <h2 className="text-gray-500 dark:text-gray-400 text-sm font-medium uppercase tracking-wider mb-4">Timer</h2>
 
@@ -197,5 +221,6 @@ export default function Timer({ subjects, onSessionComplete }) {
         )}
       </div>
     </div>
+    </>
   )
 }
