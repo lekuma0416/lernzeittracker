@@ -14,7 +14,7 @@ import SubjectsPage from './pages/SubjectsPage'
 export default function App() {
   useTheme()
   const { user, loading } = useAuth()
-  const { sessions, addSession, deleteSession } = useSessions(user?.id)
+  const { sessions, addSession, updateSession, deleteSession } = useSessions(user?.id)
   const { subjects, addSubject, updateSubject, deleteSubject } = useSubjects(user?.id)
   const { goals, upsertGoal, deleteGoal } = useGoals(user?.id)
   const [activeTab, setActiveTab] = useState('timer')
@@ -44,7 +44,7 @@ export default function App() {
           />
         )}
         {activeTab === 'stats' && (
-          <StatsPage sessions={sessions} subjects={subjects} onDeleteSession={deleteSession} />
+          <StatsPage sessions={sessions} subjects={subjects} onDeleteSession={deleteSession} onUpdateSession={updateSession} />
         )}
         {activeTab === 'calendar' && (
           <CalendarPage sessions={sessions} subjects={subjects} />

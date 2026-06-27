@@ -2,7 +2,7 @@ import { useState } from 'react'
 import WeekChart from '../components/WeekChart'
 import SessionHistory from '../components/SessionHistory'
 
-export default function StatsPage({ sessions, subjects, onDeleteSession }) {
+export default function StatsPage({ sessions, subjects, onDeleteSession, onUpdateSession }) {
   const [filterSubject, setFilterSubject] = useState('')
 
   return (
@@ -12,6 +12,7 @@ export default function StatsPage({ sessions, subjects, onDeleteSession }) {
         sessions={sessions}
         subjects={subjects}
         onDelete={onDeleteSession}
+        onUpdate={onUpdateSession}
         filterSubject={filterSubject}
         setFilterSubject={setFilterSubject}
       />
