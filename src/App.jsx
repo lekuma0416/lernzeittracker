@@ -33,7 +33,8 @@ export default function App() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white">
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
       <main className="max-w-2xl mx-auto px-4 pt-6 pb-24 md:pb-6">
-        {activeTab === 'timer' && (
+        {/* Alle Tabs bleiben gemountet — nur per CSS versteckt damit Timer-State erhalten bleibt */}
+        <div className={activeTab === 'timer' ? '' : 'hidden'}>
           <TimerPage
             subjects={subjects}
             sessions={sessions}
@@ -42,16 +43,16 @@ export default function App() {
             onAddGoal={upsertGoal}
             onDeleteGoal={deleteGoal}
           />
-        )}
-        {activeTab === 'stats' && (
+        </div>
+        <div className={activeTab === 'stats' ? '' : 'hidden'}>
           <StatsPage sessions={sessions} subjects={subjects} onDeleteSession={deleteSession} onUpdateSession={updateSession} />
-        )}
-        {activeTab === 'calendar' && (
+        </div>
+        <div className={activeTab === 'calendar' ? '' : 'hidden'}>
           <CalendarPage sessions={sessions} subjects={subjects} />
-        )}
-        {activeTab === 'subjects' && (
+        </div>
+        <div className={activeTab === 'subjects' ? '' : 'hidden'}>
           <SubjectsPage subjects={subjects} onAdd={addSubject} onUpdate={updateSubject} onDelete={deleteSubject} />
-        )}
+        </div>
       </main>
     </div>
   )
