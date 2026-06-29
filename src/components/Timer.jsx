@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Play, Square, Pause, BookOpen } from 'lucide-react'
+import { Play, Square, Pause, BookOpen, Plus } from 'lucide-react'
 import { formatDuration } from '../lib/utils'
 import SaveModal from './SaveModal'
 
@@ -142,7 +142,16 @@ export default function Timer({ subjects, onSessionComplete }) {
       />
     )}
     <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800">
-      <h2 className="text-gray-500 dark:text-gray-400 text-sm font-medium uppercase tracking-wider mb-4">Timer</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-gray-500 dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Timer</h2>
+        <button
+          onClick={() => setDraft({ subject_id: null, started_at: new Date().toISOString(), duration_seconds: 0, note: null })}
+          className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-indigo-500 transition-colors"
+          title="Session nachtragen"
+        >
+          <Plus size={15} /> Nachtragen
+        </button>
+      </div>
 
       <div className="text-center mb-6">
         <div
